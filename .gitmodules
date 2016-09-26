@@ -1,0 +1,6 @@
+[submodule "vicar"]
+	path = vicar
+	url = https://github.com/micheldebree/vicar.git
+[submodule "micheldebree.github.io"]
+	path = micheldebree.github.io
+	url = https://github.com/micheldebree/micheldebree.github.io.git
