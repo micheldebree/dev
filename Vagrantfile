@@ -1,8 +1,9 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
-install_docker = <<SCRIPT
-#!/bin/bash
+# Create a linux VM to use as a personal development environment
 
+@install_docker = <<SCRIPT
+#!/bin/bash
 # add docker repo
 sudo tee /etc/yum.repos.d/docker.repo <<-'EOF'
 [dockerrepo]
@@ -24,30 +25,26 @@ sudo chkconfig docker on
 sudo systemctl start docker
 SCRIPT
 
-install_vicar = <<SCRIPT
-  # build vicar docker image
-  cd /vagrant/vicar
-  docker build -t micheldebree/vicar-dev .
-
-  # create a new container of the image
-  docker create --name vicar-dev -p 4100:4100 -p 35730:35730 -v $PWD:$PWD micheldebree/vicar-dev /bin/bash -c "cd $PWD; grunt serve"
+@install_nodejs = <<SCRIPT
+#!/bin/bash
+yum install -y epel-release git
+yum install -y nodejs npm
+npm install -g bower grunt-cli
 SCRIPT
 
-install_website = <<SCRIPT
-  # build vicar docker image
-  cd /vagrant/micheldebree.github.io
-  docker build -t micheldebree/website-dev .
-
-  # create a new instance of the image
-  docker create --name website-dev -p 4000:4000 -v $PWD:$PWD micheldebree/website-dev /bin/bash -c "cd $PWD; jekyll serve --incremental --watch --force_polling"
+@install_ruby = <<SCRIPT
+#!/bin/bash
+# see http://rvm.io/
+gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
+curl -sSL https://get.rvm.io | bash -s stable
+source /usr/local/rvm/scripts/rvm
+rvm install 2.3.1
+gem install bundler
 SCRIPT
 
-start_vicar = <<SCRIPT
-  docker start vicar-dev
-SCRIPT
-
-start_website = <<SCRIPT
-  docker start website-dev
+@install_jekyll = <<SCRIPT
+#!/bin/bash
+gem install jekyll
 SCRIPT
 
 Vagrant.configure(2) do |config|
@@ -62,10 +59,11 @@ Vagrant.configure(2) do |config|
   config.ssh.insert_key = false
 
   config.vm.network 'forwarded_port', guest: 4000, host: 4000
-  config.vm.network 'forwarded_port', guest: 4100, host: 4100
+  config.vm.network 'forwarded_port', guest: 9100, host: 9100
   config.vm.network 'forwarded_port', guest: 35_730, host: 35_730
 
-  config.vm.provision 'shell', inline: install_docker
-  config.vm.provision 'shell', inline: install_vicar
-  config.vm.provision 'shell', inline: install_website
+  # config.vm.provision 'shell', inline: @install_docker
+  config.vm.provision 'shell', inline: @install_nodejs
+  config.vm.provision 'shell', inline: @install_ruby
+  config.vm.provision 'shell', inline: @install_jekyll
 end
